@@ -1,14 +1,15 @@
 import {useEffect, useMemo, useState} from 'react';
 import {useNavigate, useSearchParams} from 'react-router-dom';
 import {getQuizzes} from '../services/api';
+import TestHubHeader from '../components/testhub/TestHubHeader';
+import SubjectTestCard from '../components/testhub/SubjectTestCard';
+import StartTestModal from '../components/testhub/StartTestModal';
 
-function TestHub({candidateName='', onSetCandidateName=()=>{}})
+function TestHub({candidateName='Student'})
 {
   const navigate=useNavigate();
   const [searchParams]=useSearchParams();
   const [quizzes, setQuizzes]=useState([]);
-  const [tempCandidateName, setTempCandidateName]=useState(candidateName||'');
-  const [showNameModal, setShowNameModal]=useState(!candidateName);
   const [loading, setLoading]=useState(true);
   const [startError, setStartError]=useState('');
   const [selectedQuiz, setSelectedQuiz]=useState(null);
@@ -36,16 +37,6 @@ function TestHub({candidateName='', onSetCandidateName=()=>{}})
     loadQuizzes();
   }, []);
 
-  const handleSetName=(e) =>
-  {
-    e.preventDefault();
-    if (tempCandidateName.trim())
-    {
-      onSetCandidateName(tempCandidateName.trim());
-      setShowNameModal(false);
-    }
-  };
-
   const startSecureTest=async () =>
   {
     const quiz=selectedQuiz;
@@ -70,83 +61,31 @@ function TestHub({candidateName='', onSetCandidateName=()=>{}})
     }
 
     setSelectedQuiz(null);
-    navigate(`/quiz/${quiz.id}/attempt?name=${encodeURIComponent(candidateName||'Student')}`);
+    navigate(`/quiz/${quiz.id}/attempt?name=${encodeURIComponent(effectiveCandidateName)}`);
   };
 
   const subjectCount=useMemo(() => new Set(quizzes.map((item) => item.subject)).size, [quizzes]);
+  const effectiveCandidateName=candidateName||searchParams.get('name')||'Student';
 
   return (
     <div className="quiz-shell">
-      {/* Name Modal */}
-      {showNameModal && (
-        <div className="modal-overlay">
-          <div className="modal-card name-modal">
-            <h2>Welcome to CIDE Assessments</h2>
-            <p>Please enter your name to get started</p>
-            <form onSubmit={handleSetName}>
-              <input
-                autoFocus
-                type="text"
-                value={tempCandidateName}
-                onChange={(e) => setTempCandidateName(e.target.value)}
-                placeholder="Enter your full name"
-                className="modal-input"
-              />
-              <button type="submit" className="btn-primary" disabled={!tempCandidateName.trim()}>
-                Continue
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      <header className="quiz-hub-header panel-card">
-        <div>
-          <h1>All Subject Tests</h1>
-          <p>Select any subject below. Disclaimer and permissions are required before test starts.</p>
-          <p className="security-notice">Tab switch or window blur will auto-submit the test with current score.</p>
-        </div>
-        <div className="hub-meta-info">
-          <div className="hub-stats">Subjects: {subjectCount} · Tests: {quizzes.length}</div>
-        </div>
-      </header>
+      <TestHubHeader subjectCount={subjectCount} testCount={quizzes.length} />
 
       {loading? <p>Loading available tests...</p>:null}
       {startError? <p className="danger-text">{startError}</p>:null}
 
       <section className="subject-grid">
         {quizzes.map((quiz) => (
-          <article className="subject-card panel-card" key={quiz.id}>
-            <div className="subject-tag">{quiz.subject}</div>
-            <h3>{quiz.title}</h3>
-            <p>{quiz.description}</p>
-            <div className="subject-meta">
-              <span>{quiz.questionCount} questions</span>
-              <span>{quiz.durationMinutes} mins</span>
-            </div>
-            <button className="btn-primary" onClick={() => setSelectedQuiz(quiz)}>Take Test</button>
-          </article>
+          <SubjectTestCard quiz={quiz} key={quiz.id} onTakeTest={setSelectedQuiz} />
         ))}
       </section>
 
-      {selectedQuiz? (
-        <div className="take-test-modal-backdrop">
-          <div className="take-test-modal panel-card">
-            <h2>Test Disclaimer & Permissions</h2>
-            <p><strong>{selectedQuiz.title}</strong></p>
-            <ul>
-              <li>Fullscreen mode is mandatory during the test.</li>
-              <li>Camera permission is mandatory for proctoring.</li>
-              <li>Tab switch, blur, or fullscreen exit will auto-submit test.</li>
-            </ul>
-            {startError? <p className="danger-text">{startError}</p>:null}
-            <div className="modal-actions">
-              <button onClick={() => setSelectedQuiz(null)}>Cancel</button>
-              <button className="btn-primary" onClick={startSecureTest}>Allow & Start Test</button>
-            </div>
-          </div>
-        </div>
-      ):null}
+      <StartTestModal
+        quiz={selectedQuiz}
+        startError={startError}
+        onCancel={() => setSelectedQuiz(null)}
+        onStart={startSecureTest}
+      />
     </div>
   );
 }

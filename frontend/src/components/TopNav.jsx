@@ -5,7 +5,8 @@ function TopNav({candidateName='Student'})
 {
   const location=useLocation();
 
-  const isActive=(path) => location.pathname===path;
+  const isTakeTestActive=location.pathname.startsWith('/tests')||location.pathname.startsWith('/quiz');
+  const isPracticeActive=location.pathname.startsWith('/practice');
 
   return (
     <nav className="top-nav-premium">
@@ -26,18 +27,18 @@ function TopNav({candidateName='Student'})
           <li>
             <Link 
               to="/tests" 
-              className={`nav-hover-link ${isActive('/tests')?'nav-active':''}`}
+              className={`nav-hover-link ${isTakeTestActive?'nav-active':''}`}
             >
-              <span className="nav-icon">📝</span>
+              <span className="nav-icon" aria-hidden="true">T</span>
               <span>Take Test</span>
             </Link>
           </li>
           <li>
             <Link 
               to="/practice" 
-              className={`nav-hover-link ${isActive('/practice')?'nav-active':''}`}
+              className={`nav-hover-link ${isPracticeActive?'nav-active':''}`}
             >
-              <span className="nav-icon">⚡</span>
+              <span className="nav-icon" aria-hidden="true">P</span>
               <span>Live Editor</span>
             </Link>
           </li>
