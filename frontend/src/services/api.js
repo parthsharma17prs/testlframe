@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL=import.meta.env.VITE_API_URL||'http://localhost:5000';
+const defaultApiUrl=import.meta.env.DEV ? 'http://localhost:5001' : '/api';
+const API_URL=import.meta.env.VITE_API_URL||defaultApiUrl;
 
 export const executeCode=(payload) => axios.post(`${API_URL}/api/code-execution/execute`, payload);
 export const submitCode=(payload) => axios.post(`${API_URL}/api/code-execution/submit`, payload);

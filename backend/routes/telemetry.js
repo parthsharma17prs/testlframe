@@ -7,7 +7,9 @@ const router=express.Router();
 
 const __filename=fileURLToPath(import.meta.url);
 const __dirname=path.dirname(__filename);
-const dataDir=path.resolve(__dirname, '../dataframes');
+const dataDir=process.env.TELEMETRY_DIR
+  ? path.resolve(process.env.TELEMETRY_DIR)
+  : (process.env.VERCEL ? '/tmp/dataframes' : path.resolve(__dirname, '../dataframes'));
 
 async function ensureDataDir()
 {
