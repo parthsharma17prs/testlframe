@@ -21,3 +21,4 @@ yarn-error.log*
 
 # Runtime data
 backend/dataframes/
+.vercel

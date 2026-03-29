@@ -2,12 +2,13 @@ import {useEffect, useMemo, useState} from 'react';
 import {useNavigate, useSearchParams} from 'react-router-dom';
 import {getQuizzes} from '../services/api';
 
-function TestHub()
+function TestHub({candidateName='', onSetCandidateName=()=>{}})
 {
   const navigate=useNavigate();
   const [searchParams]=useSearchParams();
   const [quizzes, setQuizzes]=useState([]);
-  const [candidateName, setCandidateName]=useState(searchParams.get('name')||'Student');
+  const [tempCandidateName, setTempCandidateName]=useState(candidateName||'');
+  const [showNameModal, setShowNameModal]=useState(!candidateName);
   const [loading, setLoading]=useState(true);
   const [startError, setStartError]=useState('');
   const [selectedQuiz, setSelectedQuiz]=useState(null);
@@ -34,6 +35,16 @@ function TestHub()
 
     loadQuizzes();
   }, []);
+
+  const handleSetName=(e) =>
+  {
+    e.preventDefault();
+    if (tempCandidateName.trim())
+    {
+      onSetCandidateName(tempCandidateName.trim());
+      setShowNameModal(false);
+    }
+  };
 
   const startSecureTest=async () =>
   {
@@ -66,20 +77,36 @@ function TestHub()
 
   return (
     <div className="quiz-shell">
+      {/* Name Modal */}
+      {showNameModal && (
+        <div className="modal-overlay">
+          <div className="modal-card name-modal">
+            <h2>Welcome to CIDE Assessments</h2>
+            <p>Please enter your name to get started</p>
+            <form onSubmit={handleSetName}>
+              <input
+                autoFocus
+                type="text"
+                value={tempCandidateName}
+                onChange={(e) => setTempCandidateName(e.target.value)}
+                placeholder="Enter your full name"
+                className="modal-input"
+              />
+              <button type="submit" className="btn-primary" disabled={!tempCandidateName.trim()}>
+                Continue
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <header className="quiz-hub-header panel-card">
         <div>
           <h1>All Subject Tests</h1>
           <p>Select any subject below. Disclaimer and permissions are required before test starts.</p>
           <p className="security-notice">Tab switch or window blur will auto-submit the test with current score.</p>
         </div>
-        <div className="candidate-card">
-          <label htmlFor="candidate-name">Candidate Name</label>
-          <input
-            id="candidate-name"
-            value={candidateName}
-            onChange={(e) => setCandidateName(e.target.value)}
-            placeholder="Enter your name"
-          />
+        <div className="hub-meta-info">
           <div className="hub-stats">Subjects: {subjectCount} · Tests: {quizzes.length}</div>
         </div>
       </header>
